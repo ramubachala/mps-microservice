@@ -61,10 +61,40 @@ module.exports.CreateWebServer = function (parent, args) {
                 var entry = obj.common.Clone(obj.parent.mpsComputerList[i]);
                 delete entry.pass; 
                 list.push(entry);
-            } // Remove all passwords.
+            } 
+            res.set({ 'Content-Type': 'application/json' });
+            res.send(JSON.stringify(list));
+        }  else if (req.query.action == 'getallcomputer') {
+            var amtcreds = {};            
+            try {
+                amtcreds = JSON.parse(obj.fs.readFileSync("private/credentials.json"));
+            } catch (e) { console.log(e); }
+            var list = [];            
+            for (var i in obj.parent.mpsComputerList) {                
+                obj.parent.mpsComputerList[i].user = amtcreds[i] ? amtcreds[i].amtuser : "admin";
+                var entry = obj.common.Clone(obj.parent.mpsComputerList[i]);                
+                delete entry.pass; 
+                //add icon and conn                
+                entry.icon = 1;
+                entry.conn = 1;
+                list.push(entry);
+                // remove from credential list all that is online
+                if (amtcreds[i]) { delete amtcreds[i] };
+            } 
+            for (var i in amtcreds) {
+                var entry = obj.common.Clone(amtcreds[i]);                
+                delete entry.pass;
+                if (!entry.name) entry.name = i;
+                entry.host = i;
+                //add icon and conn
+                entry.icon = 1;
+                entry.conn = 0;
+                list.push(entry);
+            }
             res.set({ 'Content-Type': 'application/json' });
             res.send(JSON.stringify(list));
         }
+
         try { res.close(); } catch (e) { }
     });
 
