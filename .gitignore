@@ -1,3 +1,9 @@
+# private folder
+private/*.json
+private/*.crt
+private/*.key
+private/*.cer
+
 # Logs
 logs
 *.log
