@@ -1,9 +1,11 @@
 {
-    "usewhitelist" : "true",
+    "usewhitelist" : true,
     "commonName": "localhost",
     "mpsport": 4433,
     "mpsusername": "standalone",
     "mpspass": "P@ssw0rd",
     "country": "US",
-    "company": "NoCorp"
+    "company": "NoCorp",
+    "debug": true,
+    "listenany": true
 }

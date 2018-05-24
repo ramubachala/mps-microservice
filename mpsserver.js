@@ -171,7 +171,8 @@ module.exports.CreateMpsServer = function (parent, db, args, certificates) {
                     socket.tag.MinorVersion = common.ReadInt(data, 5);
                     socket.tag.SystemId = guidToStr(common.rstr2hex(data.substring(13, 29))).toLowerCase();
                     Debug(3, 'MPS:PROTOCOLVERSION', socket.tag.MajorVersion, socket.tag.MinorVersion, socket.tag.SystemId);
-                    obj.db.IsGUIDApproved(socket.tag.SystemId,function (allowed){
+                    if (obj.args.usewhitelist) {
+                        obj.db.IsGUIDApproved(socket.tag.SystemId,function (allowed){
                         socket.tag.nodeid = socket.tag.SystemId;
                         if (allowed) {
                             if (socket.tag.certauth) {                                
@@ -184,7 +185,14 @@ module.exports.CreateMpsServer = function (parent, db, args, certificates) {
                                 socket.end();
                             } catch (e) {}
                         }                         
-                    });   
+                        });
+                    } else {
+                        socket.tag.nodeid = socket.tag.SystemId;
+                        if (socket.tag.certauth) {                                
+                            obj.ciraConnections[socket.tag.SystemId] = socket;
+                            obj.parent.CIRAConnected(socket.tag.nodeid);
+                        }
+                    }   
                     return 93;                 
                 }
                 case APFProtocol.USERAUTH_REQUEST: {
@@ -570,6 +578,7 @@ module.exports.CreateMpsServer = function (parent, db, args, certificates) {
     }
 
     function ChangeHostname(socket, host) {
+        Debug(3,"Change hostname to ", host);
         if (socket.tag.host == host) return; // Nothing to change
         socket.tag.host = host;
         if (obj.parent.mpsComputerList[socket.tag.nodeid]) {                
@@ -579,6 +588,7 @@ module.exports.CreateMpsServer = function (parent, db, args, certificates) {
             obj.parent.mpsComputerList[socket.tag.nodeid] = computerEntry;                
         } else {
             var computerEntry = {name: host, host: socket.tag.nodeid, amtuser: "admin", amtpass: null};
+
             obj.parent.mpsComputerList[socket.tag.nodeid] = computerEntry;
         }
     }

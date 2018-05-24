@@ -11,6 +11,7 @@
     obj.args = args;
     obj.datapath = datapath;
     var fs = require('fs');
+    obj.fs = fs;
 
     // Mock up code, real deployment must use proper data providers
     function getAllGUIDS() {
@@ -78,6 +79,19 @@
         }
         if (func) func(result);
     };
-
+    
+    obj.getAmtPassword=function(uuid) {
+        console.log("AMT creds here");
+        var result = ['admin',''];
+        try {
+            var amtcreds = JSON.parse(obj.fs.readFileSync("private/credentials.json"));
+            if (amtcreds && amtcreds[uuid]) {
+                result = [ amtcreds[uuid].amtuser, amtcreds[uuid].amtpass ]
+            }
+        } catch (e) { console.log(e); }
+        console.log("AMT creds here");
+        return result;
+    }
+    
     return obj;
 }
