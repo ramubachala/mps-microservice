@@ -21,6 +21,7 @@ module.exports.CreateWebServer = function (parent, args) {
     obj.common = require('./common.js');
     obj.constants = require('constants');
     obj.parent = parent;
+    obj.db = parent.db;
     obj.users = {};
 
     obj.notifyUsers = function (msg) {
@@ -31,7 +32,7 @@ module.exports.CreateWebServer = function (parent, args) {
         }
     }
     obj.debug = function (msg) { if (args.debug) { console.log(msg); } }
-    
+
     
     // Indicates to ExpressJS that the public folder should be used to serve static files. Mesh Commander will be at "default.htm".
     obj.app.use(obj.express.static(obj.path.join(__dirname, 'public')));
@@ -141,7 +142,8 @@ module.exports.CreateWebServer = function (parent, args) {
         // We got a new web socket connection, initiate a TCP connection to the target Intel AMT host/port.
         obj.debug('Opening web socket connection to ' + req.query.host + ':' + req.query.port + '.');
         // Fetch Intel AMT credentials & Setup interceptor
-        var credentials = obj.getAmtPassword(req.query.host);
+        var credentials = obj.db.getAmtPassword(req.query.host);
+        obj.debug("Credential for "+req.query.host+" is "+JSON.stringify(credentials));
         if (credentials != null) {
             obj.debug("Creating credential");
             if (req.query.p == 1) { ws.interceptor = obj.interceptor.CreateHttpInterceptor({ host: req.query.host, port: req.query.port, user: credentials[0], pass: credentials[1] }); }
@@ -151,7 +153,7 @@ module.exports.CreateWebServer = function (parent, args) {
         if (req.query.tls == 0) {
             // If this is TCP (without TLS) set a normal TCP socket
             // check if this is MPS connection
-            var uuid = obj.getAmtCIRAUUID(req.query.host);
+            var uuid = req.query.host;
             if (uuid) {
                 var ciraconn = obj.parent.mpsserver.ciraConnections[uuid];
                 ws.forwardclient = obj.parent.mpsserver.SetupCiraChannel(ciraconn,req.query.port);
@@ -236,7 +238,7 @@ module.exports.CreateWebServer = function (parent, args) {
     var port = 3000;
     if (args.port != null) { port = parseInt(args.port); }
     if (isNaN(port) || (port == null) || (typeof port != 'number') || (port < 0) || (port > 65536)) { port = 3000; }
-    if (args.any != null) {
+    if (args.listenany != null) {
         obj.app.listen(port, function () { console.log('MeshCommander running on http://*:' + port + '.'); });
     } else {
         obj.app.listen(port, '127.0.0.1', function () { console.log('MeshCommander running on http://127.0.0.1:' + port + '.'); });

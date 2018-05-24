@@ -41822,7 +41822,8 @@ if (typeof module !== "undefined" && module.exports) {
 
                 desktop.tlsv1only = amtstack.wsman.comm.tlsv1only;
                 var ports = portsFromHost(currentcomputer["host"], currentcomputer["tls"]);
-                if (Q('id_DeskSB').enabled) {
+                var sb_enabled = (amtsysstate['IPS_ScreenConfigurationService'].response['EnabledState'] & 1);
+                if (sb_enabled) {
                     amtstack.IPS_ScreenConfigurationService_SetSessionState(Q('id_DeskSB').checked == true ? 1 : 0, 3, function (stack, name, responses, status) {
                         if (status != 200) { Q('id_DeskSB').checked = false; } // Screen blanking command is not supported, uncheck the screen blanking
                         desktop.Start(ports.host, ports.redir, amtstack.wsman.comm.user, amtstack.wsman.comm.pass, currentcomputer["tls"]);
